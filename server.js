@@ -22,7 +22,7 @@ mongoose
   .catch((err) => console.log("MongoDB bağlantı hatası:", err));
 
 
-app.use("/api/auth", authRoutes);
+app.use("/api", authRoutes);
 
 // Basit bir test endpointi
 app.get("/", (req, res) => {

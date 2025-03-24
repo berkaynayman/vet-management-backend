@@ -6,7 +6,7 @@ const Veterinarian = require("../models/Veterinarian");
 const router = express.Router();
 
 // 🟢 REGISTER (Veteriner Kayıt)
-router.post("/register", async (req, res) => {
+router.post("/doctor/register", async (req, res) => {
   try {
     const { name, email, password } = req.body;
 
@@ -35,7 +35,7 @@ router.post("/register", async (req, res) => {
 });
 
 // 🟠 LOGIN (Veteriner Girişi)
-router.post("/login", async (req, res) => {
+router.post("/doctor/login", async (req, res) => {
   try {
     const { email, password } = req.body;
 
