@@ -4,7 +4,9 @@ const mongoose = require("mongoose");
 const cors = require("cors");
 const helmet = require("helmet");
 const morgan = require("morgan");
+
 const authRoutes = require("./routes/auth");
+const appointmentRoutes = require("./routes/appointment");
 
 const app = express();
 
@@ -23,6 +25,7 @@ mongoose
 
 
 app.use("/api", authRoutes);
+app.use("/api", appointmentRoutes);
 
 // Basit bir test endpointi
 app.get("/", (req, res) => {
