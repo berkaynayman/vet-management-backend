@@ -1,4 +1,5 @@
 const express = require("express");
+const Pet = require("../models/Pet");
 const Appointment = require("../models/Appointment");
 const authMiddleware = require("../middlewares/authMiddleware");
 
@@ -44,6 +45,31 @@ router.post("/doctor/appointments", authMiddleware, async (req, res) => {
     } catch (error) {
       res.status(500).json({ message: "Sunucu hatası" });
     }
+});
+
+// 🟢 Hasta Kullanıcısı Randevu Oluşturma
+router.post("/pet-owner/appointments", authMiddleware, async (req, res) => {
+  try {
+    const { petId, doctorId, appointmentDate } = req.body;
+    const ownerId = req.doctorId; // Token'den gelen kullanıcı ID
+
+    const pet = await Pet.findOne({ _id: petId, owner: ownerId });
+    if (!pet) {
+      return res.status(404).json({ message: "Evcil hayvan bulunamadı!" });
+    }
+
+    const newAppointment = new Appointment({
+      doctor: doctorId,
+      petName: pet.name,
+      ownerName: req.ownerId, 
+      appointmentDate
+    });
+
+    await newAppointment.save();
+    res.status(201).json({ message: "Randevu başarıyla oluşturuldu!", appointment: newAppointment });
+  } catch (error) {
+    res.status(500).json({ message: "Sunucu hatası" });
+  }
 });
   
 

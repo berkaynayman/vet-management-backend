@@ -7,6 +7,7 @@ const morgan = require("morgan");
 
 const authRoutes = require("./routes/auth");
 const appointmentRoutes = require("./routes/appointment");
+const petOwnerRoutes = require("./routes/petOwner");
 
 const app = express();
 
@@ -26,6 +27,8 @@ mongoose
 
 app.use("/api", authRoutes);
 app.use("/api", appointmentRoutes);
+app.use("/api", petOwnerRoutes);
+
 
 // Basit bir test endpointi
 app.get("/", (req, res) => {
