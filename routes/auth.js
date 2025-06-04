@@ -1,17 +1,17 @@
 const express = require("express");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
-const Veterinarian = require("../models/Veterinarian");
+const User = require("../models/User");
 
 const router = express.Router();
 
-// 🟢 REGISTER (Veteriner Kayıt)
-router.post("/doctor/register", async (req, res) => {
+// Kullanıcı Kaydı (Register)
+router.post("/auth/register", async (req, res) => {
   try {
-    const { name, email, password } = req.body;
+    const { email, password, first_name, last_name, phone, role = "pet_owner" } = req.body;
 
     // Kullanıcı zaten var mı kontrol et
-    const existingUser = await Veterinarian.findOne({ email });
+    const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res.status(400).json({ message: "Bu e-posta zaten kullanılıyor." });
     }
@@ -20,27 +20,30 @@ router.post("/doctor/register", async (req, res) => {
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    // Yeni veteriner kullanıcısını oluştur
-    const newVeterinarian = new Veterinarian({
-      name,
+    // Yeni kullanıcı oluştur
+    const newUser = new User({
       email,
       password: hashedPassword,
+      first_name,
+      last_name,
+      phone,
+      role
     });
 
-    await newVeterinarian.save();
+    await newUser.save();
     res.status(201).json({ message: "Kayıt başarılı!" });
   } catch (error) {
     res.status(500).json({ message: "Sunucu hatası" });
   }
 });
 
-// 🟠 LOGIN (Veteriner Girişi)
-router.post("/doctor/login", async (req, res) => {
+// Kullanıcı Girişi (Login)
+router.post("/auth/login", async (req, res) => {
   try {
     const { email, password } = req.body;
 
     // Kullanıcıyı bul
-    const user = await Veterinarian.findOne({ email });
+    const user = await User.findOne({ email });
     if (!user) {
       return res.status(400).json({ message: "Geçersiz kimlik bilgileri" });
     }
@@ -52,11 +55,43 @@ router.post("/doctor/login", async (req, res) => {
     }
 
     // JWT oluştur
-    const token = jwt.sign({ id: user._id, role: "doctor" }, process.env.JWT_SECRET, { expiresIn: "24h" });
+    const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, { expiresIn: "24h" });
 
-    res.json({ token, user: { id: user._id, name: user.name, email: user.email } });
+    // Kullanıcı bilgilerini döndür (şifre hariç)
+    const userResponse = {
+      id: user._id,
+      email: user.email,
+      first_name: user.first_name,
+      last_name: user.last_name,
+      phone: user.phone,
+      role: user.role,
+      created_at: user.created_at
+    };
+
+    res.json({ user: userResponse, token });
   } catch (error) {
     res.status(500).json({ message: "Sunucu hatası" });
+  }
+});
+
+// Mevcut kullanıcı bilgilerini getir
+router.get("/auth/me", async (req, res) => {
+  try {
+    const token = req.header("Authorization")?.split(" ")[1];
+    if (!token) {
+      return res.status(401).json({ message: "Yetkilendirme reddedildi!" });
+    }
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const user = await User.findById(decoded.id).select("-password");
+    
+    if (!user) {
+      return res.status(404).json({ message: "Kullanıcı bulunamadı" });
+    }
+
+    res.json(user);
+  } catch (error) {
+    res.status(401).json({ message: "Geçersiz token!" });
   }
 });
 

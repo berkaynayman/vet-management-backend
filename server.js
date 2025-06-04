@@ -6,8 +6,9 @@ const helmet = require("helmet");
 const morgan = require("morgan");
 
 const authRoutes = require("./routes/auth");
-const appointmentRoutes = require("./routes/appointment");
-const petOwnerRoutes = require("./routes/petOwner");
+const usersRoutes = require("./routes/users");
+const petsRoutes = require("./routes/pets");
+const appointmentsRoutes = require("./routes/appointments");
 
 const app = express();
 
@@ -17,18 +18,17 @@ app.use(cors());
 app.use(helmet());
 app.use(morgan("dev"));
 
-
 // MongoDB bağlantısı
 mongoose
   .connect(process.env.MONGO_URI)
   .then(() => console.log("MongoDB bağlantısı başarılı"))
   .catch((err) => console.log("MongoDB bağlantı hatası:", err));
 
-
+// Rotalar
 app.use("/api", authRoutes);
-app.use("/api", appointmentRoutes);
-app.use("/api", petOwnerRoutes);
-
+app.use("/api", usersRoutes);
+app.use("/api", petsRoutes);
+app.use("/api", appointmentsRoutes);
 
 // Basit bir test endpointi
 app.get("/", (req, res) => {

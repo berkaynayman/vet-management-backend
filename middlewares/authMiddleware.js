@@ -9,14 +9,10 @@ const authMiddleware = async (req, res, next) => {
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
-    if (decoded.role === "doctor") {
-      req.doctorId = decoded.id; // Eğer doktor ise req.doctorId'yi set et
-    } else if (decoded.role === "petOwner") {
-      req.petOwnerId = decoded.id; // Eğer petOwner ise req.petOwnerId'yi set et
-    } else {
-      return res.status(403).json({ message: "Geçersiz rol!" });
-    }
+    
+    // Kullanıcı ID'sini ve rolünü request'e ekle
+    req.userId = decoded.id;
+    req.userRole = decoded.role;
 
     next();
   } catch (error) {
