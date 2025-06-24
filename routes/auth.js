@@ -95,4 +95,57 @@ router.get("/auth/me", async (req, res) => {
   }
 });
 
+// Profil bilgilerini getir
+router.get("/profile", async (req, res) => {
+  try {
+    console.log("req", req)
+    const token = req.header("Authorization")?.split(" ")[1];
+    if (!token) {
+      return res.status(401).json({ message: "Yetkilendirme reddedildi!" });
+    }
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const user = await User.findById(decoded.id).select("-password");
+    
+    if (!user) {
+      return res.status(404).json({ message: "Kullanıcı bulunamadı" });
+    }
+
+    res.json(user);
+  } catch (error) {
+    res.status(401).json({ message: "Geçersiz token!" });
+  }
+});
+
+// Profil bilgilerini güncelle
+router.put("/profile", async (req, res) => {
+  try {
+    const token = req.header("Authorization")?.split(" ")[1];
+    if (!token) {
+      return res.status(401).json({ message: "Yetkilendirme reddedildi!" });
+    }
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const { first_name, last_name, phone } = req.body;
+    
+    const user = await User.findById(decoded.id);
+    if (!user) {
+      return res.status(404).json({ message: "Kullanıcı bulunamadı" });
+    }
+
+    // Güncelleme
+    if (first_name) user.first_name = first_name;
+    if (last_name) user.last_name = last_name;
+    if (phone) user.phone = phone;
+    
+    await user.save();
+    
+    // Şifre olmadan kullanıcı bilgilerini döndür
+    const updatedUser = await User.findById(decoded.id).select("-password");
+    res.json(updatedUser);
+  } catch (error) {
+    res.status(500).json({ message: "Sunucu hatası" });
+  }
+});
+
 module.exports = router;
